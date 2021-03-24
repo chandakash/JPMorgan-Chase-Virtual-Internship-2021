@@ -1,0 +1,134 @@
+From 2b7bdc0d7c5a0568b1af017e92cd7c3e2a43d001 Mon Sep 17 00:00:00 2001
+From: akash chand <akashchand1703@gmail.com>
+Date: Thu, 4 Mar 2021 12:18:34 +0530
+Subject: [PATCH] Create Patch File
+
+---
+ client3.py     | 51 ++++++++++++++++++++++++++++++--------------------
+ client_test.py | 41 ++++++++++++++++++++++++----------------
+ 2 files changed, 56 insertions(+), 36 deletions(-)
+
+diff --git a/client3.py b/client3.py
+index f1771c3..5140342 100644
+--- a/client3.py
++++ b/client3.py
+@@ -29,31 +29,42 @@ QUERY = "http://localhost:8080/query?id={}"
+ # 500 server request
+ N = 500
+ 
++
+ def getDataPoint(quote):
+-	""" Produce all of the needed values to generate a datapoint """
+-	""" ------------- Update this function ------------- """
+-	stock = quote['stock']
+-	bid_price = float(quote['top_bid']['price'])
+-	ask_price = float(quote['top_ask']['price'])
+-	price = bid_price
+-	return stock, bid_price, ask_price, price
++    """ Produce all of the needed values to generate a datapoint """
++    """ ------------- Update this function ------------- """
++    stock = quote['stock']
++    bid_price = float(quote['top_bid']['price'])
++    ask_price = float(quote['top_ask']['price'])
++    price = (bid_price + ask_price) / 2
++    return stock, bid_price, ask_price, price
++
+ 
+ def getRatio(price_a, price_b):
+-	""" Get ratio of price_a and price_b """
+-	""" ------------- Update this function ------------- """
+-	""" Also create some unit tests for this function in client_test.py """
+-	return 1
++    """ Get ratio of price_a and price_b """
++    """ ------------- Update this function ------------- """
++    """ Also create some unit tests for this function in client_test.py """
++    try:
++        ratio = price_a/price_b
++        return ratio
++    except Exception as e:
++        print("price b is zero so, can't find the ratio")
++        print(e)
++        return
+ 
+-# Main
++        # Main
+ if __name__ == "__main__":
+ 
+-	# Query the price once every N seconds.
+-	for _ in iter(range(N)):
+-		quotes = json.loads(urllib.request.urlopen(QUERY.format(random.random())).read())
++    # Query the price once every N seconds.
++    for _ in iter(range(N)):
++        quotes = json.loads(urllib.request.urlopen(
++            QUERY.format(random.random())).read())
+ 
+-		""" ----------- Update to get the ratio --------------- """
+-		for quote in quotes:
+-			stock, bid_price, ask_price, price = getDataPoint(quote)
+-			print ("Quoted %s at (bid:%s, ask:%s, price:%s)" % (stock, bid_price, ask_price, price))
++        """ ----------- Update to get the ratio --------------- """
++        prices = {}
++        for count, quote in enumerate(quotes, 0):
++            stock, bid_price, ask_price, prices[count] = getDataPoint(quote)
++            print("Quoted %s at (bid:%s, ask:%s, price:%s)" %
++                  (stock, bid_price, ask_price, prices[count]))
+ 
+-		print ("Ratio %s" % getRatio(price, price))
++        print("Ratio %s" % getRatio(prices[0], prices[1]))
+diff --git a/client_test.py b/client_test.py
+index af2bf26..94e9762 100644
+--- a/client_test.py
++++ b/client_test.py
+@@ -1,24 +1,33 @@
+ import unittest
+-from client3 import getDataPoint
++from client3 import getDataPoint, getRatio
+ 
+-class ClientTest(unittest.TestCase):
+-  def test_getDataPoint_calculatePrice(self):
+-    quotes = [
+-      {'top_ask': {'price': 121.2, 'size': 36}, 'timestamp': '2019-02-11 22:06:30.572453', 'top_bid': {'price': 120.48, 'size': 109}, 'id': '0.109974697771', 'stock': 'ABC'},
+-      {'top_ask': {'price': 121.68, 'size': 4}, 'timestamp': '2019-02-11 22:06:30.572453', 'top_bid': {'price': 117.87, 'size': 81}, 'id': '0.109974697771', 'stock': 'DEF'}
+-    ]
+-    """ ------------ Add the assertion below ------------ """
+-
+-  def test_getDataPoint_calculatePriceBidGreaterThanAsk(self):
+-    quotes = [
+-      {'top_ask': {'price': 119.2, 'size': 36}, 'timestamp': '2019-02-11 22:06:30.572453', 'top_bid': {'price': 120.48, 'size': 109}, 'id': '0.109974697771', 'stock': 'ABC'},
+-      {'top_ask': {'price': 121.68, 'size': 4}, 'timestamp': '2019-02-11 22:06:30.572453', 'top_bid': {'price': 117.87, 'size': 81}, 'id': '0.109974697771', 'stock': 'DEF'}
+-    ]
+-    """ ------------ Add the assertion below ------------ """
+ 
++class ClientTest(unittest.TestCase):
++    def test_getDataPoint_calculatePrice(self):
++        quotes = [
++            {'top_ask': {'price': 121.2, 'size': 36}, 'timestamp': '2019-02-11 22:06:30.572453',
++                'top_bid': {'price': 120.48, 'size': 109}, 'id': '0.109974697771', 'stock': 'ABC'},
++            {'top_ask': {'price': 121.68, 'size': 4}, 'timestamp': '2019-02-11 22:06:30.572453',
++             'top_bid': {'price': 117.87, 'size': 81}, 'id': '0.109974697771', 'stock': 'DEF'}
++        ]
++        """ ------------ Add the assertion below ------------ """
++        for quote in quotes:
++            self.assertEqual(getDataPoint(quote), (quote['stock'], quote['top_bid']['price'],
++                                                   quote['top_ask']['price'], (quote['top_bid']['price'] + quote['top_ask']['price'])/2))
+ 
+-  """ ------------ Add more unit tests ------------ """
++    def test_getDataPoint_calculatePriceBidGreaterThanAsk(self):
++        quotes = [
++            {'top_ask': {'price': 119.2, 'size': 36}, 'timestamp': '2019-02-11 22:06:30.572453',
++                'top_bid': {'price': 120.48, 'size': 109}, 'id': '0.109974697771', 'stock': 'ABC'},
++            {'top_ask': {'price': 121.68, 'size': 4}, 'timestamp': '2019-02-11 22:06:30.572453',
++             'top_bid': {'price': 117.87, 'size': 81}, 'id': '0.109974697771', 'stock': 'DEF'}
++        ]
++        """ ------------ Add the assertion below ------------ """
++        for quote in quotes:
++            self.assertEqual(getDataPoint(quote), (quote['stock'], quote['top_bid']['price'], quote['top_ask']['price'], (
++                quote['top_bid']['price'] + quote['top_ask']['price'])/2))
+ 
++    """ ------------ Add more unit tests ------------ """
+ 
+ 
+ if __name__ == '__main__':
+-- 
+2.23.0.windows.1
+
